@@ -1721,12 +1721,14 @@
       if (step === 0) step = 1;
       
       // Calculate polynomial trend for the mean band (not just constant)
-      // Format data for polynomial calculation
-      var trendData = [];
+      // Extract speeds and values for polynomial calculation
+      var xVals = [];
+      var yVals = [];
       for (var i = 0; i < allMeasurements.length; i++) {
-        trendData.push({ speed: allMeasurements[i].speed, value: allMeasurements[i].value });
+        xVals.push(allMeasurements[i].speed);
+        yVals.push(allMeasurements[i].value);
       }
-      var trendCoeffs = calculatePolynomialTrendLine(trendData);
+      var trendCoeffs = calculatePolynomialTrendLine(xVals, yVals);
       
       // Fallback to constant mean if polynomial calculation fails
       if (!trendCoeffs || trendCoeffs.length === 0) {
