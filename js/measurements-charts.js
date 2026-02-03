@@ -632,7 +632,7 @@
   
   function downloadChartAsJPG(canvas, filename, options) {
     var opts = options || {};
-    var background = opts.background || '#ffffff';
+    var background = opts.background || '#f2f2f2';
     var quality = typeof opts.quality === 'number' ? opts.quality : 0.95;
     var exportCanvas = document.createElement('canvas');
     exportCanvas.width = canvas.width;
