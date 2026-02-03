@@ -1132,17 +1132,26 @@
       observed.push({ x: x, y: evaluatePolynomial(x, coeffs) });
     }
 
-    var forecast = [];
+    var forecastLeft = [];
     // Left side (before observed range)
     for (var xl = forecastMin; xl <= (minX - step); xl += step) {
-      forecast.push({ x: xl, y: evaluatePolynomial(xl, coeffs) });
+      forecastLeft.push({ x: xl, y: evaluatePolynomial(xl, coeffs) });
     }
+    var forecastRight = [];
     // Right side (after observed range)
     for (var xr = (maxX + step); xr <= forecastMax; xr += step) {
-      forecast.push({ x: xr, y: evaluatePolynomial(xr, coeffs) });
+      forecastRight.push({ x: xr, y: evaluatePolynomial(xr, coeffs) });
     }
 
-    return { observed: observed, forecast: forecast, minX: minX, maxX: maxX, forecastMin: forecastMin, forecastMax: forecastMax };
+    return {
+      observed: observed,
+      forecastLeft: forecastLeft,
+      forecastRight: forecastRight,
+      minX: minX,
+      maxX: maxX,
+      forecastMin: forecastMin,
+      forecastMax: forecastMax
+    };
   }
 
   function createAggregateSpeedCharts() {
@@ -1286,8 +1295,19 @@
             tension: 0.4
           },
           {
-            label: 'Prognoza (trend)',
-            data: trendData.forecast,
+            label: 'Prognoza (trend) - lewa',
+            data: trendData.forecastLeft,
+            type: 'line',
+            borderColor: 'rgba(255, 193, 7, 0.95)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 0,
+            borderDash: [6, 4],
+            tension: 0.4
+          },
+          {
+            label: 'Prognoza (trend) - prawa',
+            data: trendData.forecastRight,
             type: 'line',
             borderColor: 'rgba(255, 193, 7, 0.95)',
             backgroundColor: 'transparent',
@@ -1389,8 +1409,19 @@
             tension: 0.4
           },
           {
-            label: 'Prognoza (trend)',
-            data: trendData.forecast,
+            label: 'Prognoza (trend) - lewa',
+            data: trendData.forecastLeft,
+            type: 'line',
+            borderColor: 'rgba(255, 193, 7, 0.95)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 0,
+            borderDash: [6, 4],
+            tension: 0.4
+          },
+          {
+            label: 'Prognoza (trend) - prawa',
+            data: trendData.forecastRight,
             type: 'line',
             borderColor: 'rgba(255, 193, 7, 0.95)',
             backgroundColor: 'transparent',
