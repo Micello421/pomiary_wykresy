@@ -1,23 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1350" viewBox="0 0 1400 1350">
   <rect width="100%" height="100%" fill="#ffffff"/>
   <g font-family="Arial, Helvetica, sans-serif" fill="#111">
     <text x="60" y="90" font-size="42" font-weight="700">Funkcje matematyczne użyte do obliczeń</text>
 
     <text x="60" y="160" font-size="28" font-weight="700">1) Średnia</text>
     <text x="90" y="205" font-size="28">μ = (1/n) · Σᵢ yᵢ</text>
+    <text x="90" y="235" font-size="20" fill="#555">μ - średnia, n - liczba pomiarów, yᵢ - i-ty pomiar</text>
 
-    <text x="60" y="270" font-size="28" font-weight="700">2) Odchylenie standardowe (populacyjne)</text>
-    <text x="90" y="315" font-size="28">σ = √( (1/n) · Σᵢ (yᵢ − μ)² )</text>
+    <text x="60" y="300" font-size="28" font-weight="700">2) Odchylenie standardowe (populacyjne)</text>
+    <text x="90" y="345" font-size="28">σ = √( (1/n) · Σᵢ (yᵢ − μ)² )</text>
+    <text x="90" y="375" font-size="20" fill="#555">σ - odchylenie standardowe, μ - średnia, yᵢ − μ - odchylenie od średniej</text>
 
-    <text x="60" y="380" font-size="28" font-weight="700">3) Detekcja anomalii</text>
-    <text x="90" y="425" font-size="28">|yᵢ − μ| &gt; 2σ</text>
+    <text x="60" y="440" font-size="28" font-weight="700">3) Detekcja anomalii</text>
+    <text x="90" y="485" font-size="28">|yᵢ − μ| &gt; 2σ</text>
+    <text x="90" y="515" font-size="20" fill="#555">Punkt uznawany za anomalię jeśli jego odchylenie &gt; 2 odchylenia standardowe</text>
 
-    <text x="60" y="490" font-size="28" font-weight="700">4) Przedziały ufności (95%)</text>
-    <text x="90" y="535" font-size="28">μ ± 1.96σ</text>
+    <text x="60" y="580" font-size="28" font-weight="700">4) Przedziały ufności (95%)</text>
+    <text x="90" y="625" font-size="28">μ ± 1.96σ</text>
+    <text x="90" y="655" font-size="20" fill="#555">Pasmo zawierające ~95% wszystkich pomiarów</text>
 
-    <text x="60" y="600" font-size="28" font-weight="700">5) Trend i prognoza (wielomian 2. stopnia)</text>
-    <text x="90" y="645" font-size="28">ŷ = a·x² + b·x + c</text>
+    <text x="60" y="720" font-size="28" font-weight="700">5) Trend i prognoza (wielomian 2. stopnia)</text>
+    <text x="90" y="765" font-size="28">ŷ = a·x² + b·x + c</text>
+    <text x="90" y="795" font-size="20" fill="#555">ŷ - przewidywana wartość, x - zmienna (np. prędkość), a, b, c - współczynniki</text>
 
-    <text x="60" y="720" font-size="24" fill="#444">Uwaga: prognoza to ta sama funkcja trendu liczona poza zakresem pomiarów.</text>
+    <text x="60" y="860" font-size="28" font-weight="700">6) Niepewność prognozy (rosnąca wraz z dystansem)</text>
+    <text x="90" y="905" font-size="28">σ_prognoza = σ · (1 + d / s)</text>
+    <text x="90" y="935" font-size="20" fill="#555">σ_prognoza - niepewność w punkcie prognozy, d - dystans od danych, s - rozstęp danych</text>
+
+    <text x="60" y="1000" font-size="28" font-weight="700">7) Błąd względny (%)</text>
+    <text x="90" y="1045" font-size="28">Błąd = (σ / μ) · 100%</text>
+    <text x="90" y="1075" font-size="20" fill="#555">σ - odchylenie standardowe, μ - średnia, wyrażone jako procent średniej</text>
+
+    <text x="60" y="1140" font-size="24" fill="#444" font-weight="700">Uwaga:</text>
+    <text x="60" y="1170" font-size="20" fill="#444">• Prognoza to ta sama funkcja trendu liczona poza zakresem pomiarów</text>
+    <text x="60" y="1195" font-size="20" fill="#444">• Współczynniki (a, b, c) są obliczane metodą najmniejszych kwadratów</text>
+    <text x="60" y="1220" font-size="20" fill="#444">• Niepewność rośnie wraz z oddaleniem od obserwowanych danych (naturalne właściwości ekstrapolacji)</text>
   </g>
 </svg>
