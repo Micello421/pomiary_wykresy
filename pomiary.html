@@ -1,5 +1,8 @@
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Measurements & Charts</title>
     <link rel="icon" type="image/png" href="icons/tabicon.png"/>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -293,7 +296,7 @@
     <div id="toolbar" class="bg-dark border-bottom border-secondary shadow-sm">
       <div class="d-flex align-items-center gap-2 w-100">
         <div class="d-flex align-items-center gap-2">
-          <span class="badge rounded-pill text-bg-primary">Pomiary & Wykresy</span>
+          <span class="badge rounded-pill text-bg-primary">Measurements & Charts</span>
           <input id="file-chooser" type="file" accept="image/*" class="form-control form-control-sm">
         </div>
         <div class="vr"></div>
@@ -320,11 +323,11 @@
         <div class="vr"></div>
         <div class="d-flex align-items-center gap-2">
           <div class="btn-group btn-group-sm" role="group" aria-label="Export">
-            <a id="download-result" class="btn btn-outline-info" download="pomiary-overlay.png">Overlay</a>
-            <a id="download-combined" class="btn btn-outline-info" download="pomiary-z-wymiarami.png">With measurements</a>
-            <a id="download-combined-table" class="btn btn-outline-info" download="pomiary-z-tabela.png">With table</a>
-            <a id="download-table-image" class="btn btn-outline-info" download="tabela-pomiarow.png">Table image</a>
-            <a id="download-table-csv" class="btn btn-outline-info" download="pomiary.csv">Table CSV</a>
+            <a id="download-result" class="btn btn-outline-info" download="measurements-overlay.png">Overlay</a>
+            <a id="download-combined" class="btn btn-outline-info" download="measurements-with-lines.png">With measurements</a>
+            <a id="download-combined-table" class="btn btn-outline-info" download="measurements-with-table.png">With table</a>
+            <a id="download-table-image" class="btn btn-outline-info" download="measurements-table.png">Table image</a>
+            <a id="download-table-csv" class="btn btn-outline-info" download="measurements.csv">Table CSV</a>
           </div>
         </div>
         <span id="helptext" class="text-warning ms-auto"></span>
@@ -342,32 +345,32 @@
     <canvas id="measure" width="50" height="50" style="cursor:url(icons/target-cursor.png) 31 31,crosshair;"></canvas>
     <canvas id="loupe" width="280" height="280"></canvas>
     
-    <button id="chart-toggle-btn" type="button" class="btn btn-warning btn-lg">📊 Analiza CSV</button>
+    <button id="chart-toggle-btn" type="button" class="btn btn-warning btn-lg">📊 CSV Analysis</button>
     
     <div id="chart-analysis-section">
       <div id="chart-header">
-        <h5 class="mb-0">Analiza pomiarów z CSV</h5>
+        <h5 class="mb-0">Measurement Analysis from CSV</h5>
         <input id="csv-file-chooser" type="file" accept=".csv" multiple class="form-control form-control-sm" style="max-width: 400px;">
-        <button id="generate-charts-btn" type="button" class="btn btn-primary btn-sm">Generuj wykresy</button>
-        <button id="generate-speed-chart-btn" type="button" class="btn btn-outline-success btn-sm">Wykres średnia vs posuw</button>
-        <button id="generate-detailed-speed-charts-btn" type="button" class="btn btn-outline-warning btn-sm">Szczegółowe (anomalie + przedziały)</button>
-        <button id="download-histograms-btn" type="button" class="btn btn-success btn-sm">⬇ Histogramy i scatter</button>
-        <button id="download-speed-charts-btn" type="button" class="btn btn-success btn-sm">⬇ Wykresy prędkości</button>
-        <button id="chart-close-btn" type="button" class="btn btn-secondary btn-sm ms-auto">Zamknij</button>
+        <button id="generate-charts-btn" type="button" class="btn btn-primary btn-sm">Generate Charts</button>
+        <button id="generate-speed-chart-btn" type="button" class="btn btn-outline-success btn-sm">Mean vs Speed</button>
+        <button id="generate-detailed-speed-charts-btn" type="button" class="btn btn-outline-warning btn-sm">Detailed (Anomalies + CI)</button>
+        <button id="download-histograms-btn" type="button" class="btn btn-success btn-sm">⬇ Histograms & Scatter</button>
+        <button id="download-speed-charts-btn" type="button" class="btn btn-success btn-sm">⬇ Speed Charts</button>
+        <button id="chart-close-btn" type="button" class="btn btn-secondary btn-sm ms-auto">Close</button>
       </div>
       <div id="chart-body">
         <div id="speed-summary-section" class="chart-container">
-          <h6 class="text-light mb-3">Średnia szerokość spoiny vs prędkość posuwu</h6>
-          <div class="text-secondary mb-3" style="font-size: 10pt;">Wprowadź prędkość posuwu dla każdej próbki, a potem kliknij „Wykres średnia vs posuw”.</div>
+          <h6 class="text-light mb-3">Mean Weld Width vs Feed Rate</h6>
+          <div class="text-secondary mb-3" style="font-size: 10pt;">Enter feed rate for each sample, then click "Mean vs Speed".</div>
           <div id="speed-inputs" class="speed-inputs"></div>
-          <button id="download-speed-chart-btn" type="button" class="btn btn-info btn-sm chart-download-btn">⬇ Pobierz wykres (PNG)</button>
+          <button id="download-speed-chart-btn" type="button" class="btn btn-info btn-sm chart-download-btn">⬇ Download Chart (PNG)</button>
           <div class="chart-canvas-wrapper" style="margin-top: 20px;">
             <canvas id="speed-summary-chart"></canvas>
           </div>
         </div>
         <div id="aggregate-speed-section" class="chart-container">
-          <h6 class="text-light mb-3">Wszystkie pomiary vs prędkość posuwu (z anomaliami i przedziałami)</h6>
-          <button id="generate-aggregate-speed-charts-btn" type="button" class="btn btn-outline-info btn-sm mb-3">Generuj wykresy (anomalie + przedziały)</button>
+          <h6 class="text-light mb-3">All Measurements vs Feed Rate (with Anomalies & Confidence)</h6>
+          <button id="generate-aggregate-speed-charts-btn" type="button" class="btn btn-outline-info btn-sm mb-3">Generate Charts (Anomalies + CI)</button>
           <div id="aggregate-charts-container"></div>
         </div>
         <div id="detailed-speed-section" class="detailed-speed-section"></div>

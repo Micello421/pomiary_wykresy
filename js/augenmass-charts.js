@@ -44,7 +44,7 @@
   generateBtn.addEventListener('click', function() {
     var files = csvChooser.files;
     if (files.length === 0) {
-      alert('Wybierz przynajmniej jeden plik CSV');
+      alert('Please select at least one CSV file');
       return;
     }
     
@@ -52,7 +52,7 @@
     destroyAllCharts();
     fileMeans = {};
     fileData = {};
-    chartsOutput.innerHTML = '<p class="text-center text-info">Generowanie wykresów...</p>';
+    chartsOutput.innerHTML = '<p class="text-center text-info">Generating charts...</p>';
     
     // Process each file
     var processedCount = 0;
@@ -62,7 +62,7 @@
         if (processedCount === files.length) {
           // All files processed
           if (chartInstances.length === 0) {
-            chartsOutput.innerHTML = '<p class="text-center text-warning">Nie znaleziono danych w plikach CSV</p>';
+            chartsOutput.innerHTML = '<p class="text-center text-warning">No data found in CSV files</p>';
           }
         }
       });
@@ -72,7 +72,7 @@
   generateSpeedBtn.addEventListener('click', function() {
     var hasMeans = Object.keys(fileMeans).length > 0;
     if (!hasMeans) {
-      alert('Najpierw wygeneruj wykresy, żeby policzyć średnie.');
+      alert('Generate charts first to calculate averages.');
       return;
     }
     createSpeedSummaryChart();
@@ -80,10 +80,10 @@
 
   downloadSpeedBtn.addEventListener('click', function() {
     if (!summaryChartInstance) {
-      alert('Najpierw wygeneruj wykres średnia vs posuw.');
+      alert('Generate mean vs speed chart first.');
       return;
     }
-    downloadChartAsPNG(speedSummaryCanvas, 'srednia-vs-posuw.png');
+    downloadChartAsPNG(speedSummaryCanvas, 'mean-vs-speed.png');
   });
 
   var downloadHistogramsBtn = document.getElementById('download-histograms-btn');
@@ -98,7 +98,7 @@
 
   generateDetailedBtn.addEventListener('click', function() {
     if (Object.keys(fileData).length === 0) {
-      alert('Najpierw wygeneruj wykresy, żeby uzyskać dane pomiarów.');
+      alert('Generate charts first to get measurement data.');
       return;
     }
     createDetailedSpeedCharts();
@@ -106,7 +106,7 @@
 
   generateAggregateBtn.addEventListener('click', function() {
     if (Object.keys(fileData).length === 0) {
-      alert('Najpierw wygeneruj wykresy, żeby uzyskać dane pomiarów.');
+      alert('Generate charts first to get measurement data.');
       return;
     }
     createAggregateSpeedCharts();
@@ -254,7 +254,7 @@
     summaryBlock.className = 'summary-block';
     var summaryTitle = document.createElement('div');
     summaryTitle.className = 'summary-title text-light';
-    summaryTitle.textContent = 'Podsumowanie pomiarów (p0..p' + (values.length - 1) + ')';
+    summaryTitle.textContent = 'Measurements Summary (p0..p' + (values.length - 1) + ')';
     summaryBlock.appendChild(summaryTitle);
 
     var summaryGrid = document.createElement('div');
@@ -272,7 +272,7 @@
     var histContainer = document.createElement('div');
     histContainer.className = 'chart-container';
     var histTitle = document.createElement('h6');
-    histTitle.textContent = 'Rozkład wymiarów spoiny';
+    histTitle.textContent = 'Weld Width Distribution';
     histTitle.className = 'text-light mb-3';
     histContainer.appendChild(histTitle);
     var histDownloadBtn = document.createElement('button');
@@ -292,9 +292,9 @@
     
     var statsBox = document.createElement('div');
     statsBox.className = 'stats-box';
-    statsBox.innerHTML = '<strong>Statystyki:</strong> n = ' + values.length + 
-                        ' | μ = ' + mean.toFixed(3) + ' mm' +
-                        ' | σ = ' + std.toFixed(3) + ' mm' +
+    statsBox.innerHTML = '<strong>Statistics:</strong> n = ' + values.length + 
+                        ' | mean = ' + mean.toFixed(3) + ' mm' +
+                        ' | std = ' + std.toFixed(3) + ' mm' +
                         ' | min = ' + min.toFixed(3) + ' mm' +
                         ' | max = ' + max.toFixed(3) + ' mm';
     histContainer.appendChild(statsBox);
@@ -305,7 +305,7 @@
     var scatterContainer = document.createElement('div');
     scatterContainer.className = 'chart-container';
     var scatterTitle = document.createElement('h6');
-    scatterTitle.textContent = 'Wymiary w funkcji numeru pomiaru';
+    scatterTitle.textContent = 'Dimensions vs Measurement Number';
     scatterTitle.className = 'text-light mb-3';
     scatterContainer.appendChild(scatterTitle);
     
@@ -328,7 +328,7 @@
     scatterStats.className = 'stats-box';
     scatterStats.innerHTML = '<strong>Trend:</strong> y = ' + trendLine.slope.toFixed(4) + 'x + ' + 
                             trendLine.intercept.toFixed(3) + 
-                            ' | <strong>Średnia:</strong> ' + mean.toFixed(3) + ' mm' +
+                            ' | <strong>Mean:</strong> ' + mean.toFixed(3) + ' mm' +
                             ' | <strong>Zakres:</strong> ' + min.toFixed(3) + ' - ' + max.toFixed(3) + ' mm';
     scatterContainer.appendChild(scatterStats);
     
@@ -372,7 +372,7 @@
       data: {
         labels: binLabels,
         datasets: [{
-          label: 'Liczba pomiarów',
+          label: 'Measurement Count',
           data: histogram,
           backgroundColor: 'rgba(70, 130, 180, 0.7)',
           borderColor: 'rgba(70, 130, 180, 1)',
@@ -402,7 +402,7 @@
               borderColor: 'red',
               borderWidth: 2,
               label: {
-                content: 'Średnia',
+                content: 'Mean',
                 enabled: true
               }
             }]
@@ -486,7 +486,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Wymiary w funkcji numeru pomiaru - ' + filename,
+            text: 'Dimensions vs Measurement Number - ' + filename,
             color: '#fff',
             font: { size: 14 }
           },
@@ -550,7 +550,7 @@
     }
 
     if (points.length === 0) {
-      alert('Wpisz prędkości posuwu dla przynajmniej jednej próbki.');
+      alert('Enter feed rate for at least one sample.');
       return;
     }
 
@@ -563,7 +563,7 @@
       data: {
         datasets: [
           {
-            label: 'Średnia szerokość spoiny',
+            label: 'Mean Weld Width',
             data: points,
             backgroundColor: 'rgba(255, 193, 7, 0.7)',
             borderColor: 'rgba(255, 193, 7, 1)',
@@ -588,7 +588,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Średnia szerokość spoiny vs prędkość posuwu',
+            text: 'Mean Weld Width vs Feed Rate',
             color: '#fff',
             font: { size: 14 }
           },
@@ -600,7 +600,7 @@
               label: function(context) {
                 var raw = context.raw || {};
                 var name = raw.filename ? (' (' + raw.filename + ')') : '';
-                return 'v=' + context.parsed.x + ' mm/min, średnia=' + context.parsed.y.toFixed(3) + ' mm' + name;
+                return 'v=' + context.parsed.x + ' mm/min, mean=' + context.parsed.y.toFixed(3) + ' mm' + name;
               }
             }
           }
@@ -618,7 +618,7 @@
           y: {
             title: {
               display: true,
-              text: 'Średnia szerokość spoiny [mm]',
+              text: 'Mean Weld Width [mm]',
               color: '#fff'
             },
             ticks: { color: '#ddd' },
@@ -651,7 +651,7 @@
     }
     
     if (chartsToDownload.length === 0) {
-      alert('Brak wykresów do pobrania. Najpierw wygeneruj wykresy.');
+      alert('No charts to download. Generate charts first.');
       return;
     }
     
@@ -664,7 +664,7 @@
       })(chartsToDownload[i], i);
     }
     
-    alert('Pobieranie ' + chartsToDownload.length + ' wykresów histogramów i scatter...');
+    alert('Downloading ' + chartsToDownload.length + ' histogram and scatter charts...');
   }
 
   function downloadSpeedCharts() {
@@ -696,7 +696,7 @@
     }
     
     if (chartsToDownload.length === 0) {
-      alert('Brak wykresów prędkości do pobrania. Najpierw wygeneruj wykresy prędkości.');
+      alert('No speed charts to download. Generate speed charts first.');
       return;
     }
     
@@ -709,7 +709,7 @@
       })(chartsToDownload[i], i);
     }
     
-    alert('Pobieranie ' + chartsToDownload.length + ' wykresów prędkości...');
+    alert('Downloading ' + chartsToDownload.length + ' speed charts...');
   }
 
   function detectAnomalies(values, mean, stdDev) {
@@ -757,7 +757,7 @@
       chart1Div.className = 'chart-container';
       var title1 = document.createElement('h6');
       title1.className = 'text-light mb-2';
-      title1.textContent = filename + ' (' + speedValue + ' mm/min) - Wszystkie pomiary + anomalie';
+      title1.textContent = filename + ' (' + speedValue + ' mm/min) - All Measurements + Anomalies';
       chart1Div.appendChild(title1);
 
       var canvas1 = document.createElement('canvas');
@@ -780,7 +780,7 @@
       chart2Div.className = 'chart-container';
       var title2 = document.createElement('h6');
       title2.className = 'text-light mb-2';
-      title2.textContent = filename + ' (' + speedValue + ' mm/min) - Z przedziałami błędu';
+      title2.textContent = filename + ' (' + speedValue + ' mm/min) - With Error Intervals';
       chart2Div.appendChild(title2);
 
       var canvas2 = document.createElement('canvas');
@@ -828,7 +828,7 @@
       data: {
         datasets: [
           {
-            label: 'Normalne pomiary',
+            label: 'Normal Measurements',
             data: normalPoints,
             backgroundColor: color,
             borderColor: color.replace('0.6', '1'),
@@ -836,7 +836,7 @@
             pointRadius: 5
           },
           {
-            label: 'Anomalie',
+            label: 'Anomalies',
             data: anomalyPoints,
             backgroundColor: 'rgba(255, 0, 0, 0.8)',
             borderColor: 'rgba(255, 0, 0, 1)',
@@ -845,7 +845,7 @@
             pointStyle: 'star'
           },
           {
-            label: 'Średnia',
+            label: 'Mean',
             data: meanLine,
             type: 'line',
             borderColor: 'rgba(76, 175, 80, 1)',
@@ -863,7 +863,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Pomiary ze wskazaniem anomalii',
+            text: 'Measurements with Anomaly Indication',
             color: '#fff',
             font: { size: 12 }
           },
@@ -965,7 +965,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Pomiary z przedziałami ufności (95%)',
+            text: 'Measurements with Confidence Intervals (95%)',
             color: '#fff',
             font: { size: 12 }
           },
@@ -1133,7 +1133,7 @@
     chart1Div.className = 'chart-container';
     var title1 = document.createElement('h6');
     title1.className = 'text-light mb-2';
-    title1.textContent = 'Wszystkie pomiary vs prędkość - z anomaliami';
+    title1.textContent = 'All Measurements vs Feed Rate - with Anomalies';
     chart1Div.appendChild(title1);
 
     var canvas1 = document.createElement('canvas');
@@ -1156,7 +1156,7 @@
     chart2Div.className = 'chart-container';
     var title2 = document.createElement('h6');
     title2.className = 'text-light mb-2';
-    title2.textContent = 'Wszystkie pomiary vs prędkość - z przedziałami błędu';
+    title2.textContent = 'All Measurements vs Feed Rate - with Confidence Intervals';
     chart2Div.appendChild(title2);
 
     var canvas2 = document.createElement('canvas');
@@ -1209,7 +1209,7 @@
       data: {
         datasets: [
           {
-            label: 'Normalne pomiary',
+            label: 'Normal Measurements',
             data: normalPoints,
             backgroundColor: 'rgba(70, 130, 180, 0.5)',
             borderColor: 'rgba(70, 130, 180, 1)',
@@ -1217,7 +1217,7 @@
             pointRadius: 4
           },
           {
-            label: 'Anomalie',
+            label: 'Anomalies',
             data: anomalyPoints,
             backgroundColor: 'rgba(255, 0, 0, 0.8)',
             borderColor: 'rgba(255, 0, 0, 1)',
@@ -1244,7 +1244,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Wszystkie pomiary ze wskazaniem anomalii (>2σ)',
+            text: 'All Measurements with Anomaly Indication (>2σ)',
             color: '#fff',
             font: { size: 12 }
           },
@@ -1359,7 +1359,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Wszystkie pomiary z przedziałami ufności (95%)',
+            text: 'All Measurements with Confidence Intervals (95%)',
             color: '#fff',
             font: { size: 12 }
           },

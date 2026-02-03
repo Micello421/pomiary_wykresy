@@ -1,64 +1,68 @@
-# Pomiary i Wykresy - Narzędzie do Analizy Wymiarów Spoin
+# Measurements & Charts - Weld Quality Analysis Tool
 
-Aplikacja webowa do pomiaru wymiarów, analizy i wizualizacji danych z badań spoin.
+A web-based application for measuring dimensions, analyzing data, and visualizing weld quality metrics.
 
-## Funkcjonalności
+## Features
 
-### 📏 Pomiary
-- **Rysowanie linii pomiarowych** na zdjęciach - klik na pierwszy punkt, klik na drugi punkt
-- **Kalibracja** - podwójny klik na wymiar aby ustawić wymiar odniesienia
-- **4 tryby pracy**: Measure, Scale, Eraser, Edit
-- **Snap to angle** - przyciąganie do kątów 45°
-- **Widok powiększający (loupe)** - precyzyjne pozycjonowanie punktów
+### 📏 Measurements
+- **Draw measurement lines** on images - click first point, click second point
+- **Calibration** - double-click any dimension to set reference measurement
+- **4 work modes**: Measure, Scale, Eraser, Edit
+- **Snap to angle** - snaps to 45° angles for precision
+- **Magnifying loupe** - precise point positioning
 
-### 📊 Analiza i Eksport
-- **Export wymiarów** - 5 formatów:
-  - Overlay (przezroczysta nakładka)
-  - Z pomiarami
-  - Z tabelą pomiarów
-  - Tabela jako obraz
-  - CSV (do analizy)
+### 📊 Analysis & Export
+- **5 export formats** for measurements:
+  - Overlay (transparent layer)
+  - With measurements
+  - With measurement table
+  - Table as image
+  - CSV (for analysis)
 
-### 📈 Analiza CSV
-- **Upload wielopieniowych plików CSV**
-- **Histogramy i wykresy rozrzutu** dla każdego pliku
-- **Statystyki**: średnia, odchylenie std., min, max
-- **Pobieranie wykresów** jako PNG
+### 📈 CSV Analysis
+- **Multi-file CSV upload**
+- **Histograms and scatter plots** for each file
+- **Statistics**: mean, std dev, min, max
+- **Download charts** as PNG
 
-### 🔍 Analiza Prędkości Posuwu
-- **Wpis prędkości posuwu** (10-30 mm/min) dla każdej próbki
-- **Wykres średnia vs prędkość** z trendem wielomianowym
-- **Wszystkie pomiary** vs prędkość z:
-  - Anomaliami (>2σ)
-  - Przedziałami ufności (95% CI)
-  - Zakrzywioną linią trendu
-- **Szczegółowe wykresy** per-plik z anomaliami i przedziałami
+### 🔍 Feed Rate Analysis
+- **Feed rate input** (10-30 mm/min) for each sample
+- **Mean vs feed rate chart** with polynomial trend
+- **All measurements** vs feed rate with:
+  - Anomalies (>2σ)
+  - Confidence intervals (95% CI)
+  - Curved trend lines
+- **Detailed per-file charts** with anomalies and intervals
 
-### ⬇️ Pobieranie
-- Pobieranie histogramów i scatter plotów
-- Pobieranie wszystkich wykresów prędkości jednocześnie
+### ⬇️ Downloads
+- Download histograms and scatter plots
+- Download all speed analysis charts at once
 
-## Uruchomienie
+## Usage
 
-Otwórz `augenmass.html` w przeglądarce - nic się nie uploaduje, wszystko działa lokalnie.
+Open `pomiary.html` in your browser - nothing is uploaded, everything works locally.
 
-## Technologia
+## Technology
 
 - HTML5 Canvas
 - JavaScript ES5 (strict mode)
 - Chart.js 4.4.1
 - Bootstrap 5.3.3
-- Python (analyze_welds.py dla analizy standalone)
+- Python (analyze_welds.py for standalone analysis)
 
-## Użycie
+## Workflow
 
-1. Wczytaj zdjęcie (jpg, png, etc.)
-2. Narysuj pomiary na zdjęciu
-3. Exportuj wymiary jako CSV
-4. Uploaduj CSV do sekcji analizy
-5. Podaj prędkości posuwu dla każdej próbki
-6. Generuj i pobieraj wykresy
+1. Load image (jpg, png, etc.)
+2. Draw measurements on image
+3. Export dimensions as CSV
+4. Upload CSV to analysis section
+5. Enter feed rates for each sample
+6. Generate and download charts
 
-## Autor
+## Features
 
-Aplikacja rozwinięta z podstawowego narzędzia do pomiarów na zdjęciach z dodaniem zaawansowanej analizy statystycznej i wizualizacji danych.
+- Polynomial regression for trend lines
+- Statistical anomaly detection
+- Confidence interval visualization
+- Batch chart downloads
+
