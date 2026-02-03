@@ -381,6 +381,17 @@
             <a class="btn btn-info btn-sm chart-download-btn" href="icons/math-formulas.svg" download="wzory-matematyczne.svg">⬇ Pobierz wzory (SVG)</a>
           </div>
         </div>
+        <div id="geometry-model-section" class="chart-container">
+          <h6 class="text-light mb-3">Model geometrii napoiny w zależności od prędkości posuwu</h6>
+          <div class="text-secondary mb-3" style="font-size: 10pt;">Analiza geometrii napoiny: średnie, odchylenia standardowe i błędy pomiarowe.</div>
+          <div class="mb-3">
+            <label class="form-label text-light">Dodaj zdjęcia napoiny (opcjonalnie):</label>
+            <input id="weld-images-input" type="file" accept="image/*" multiple class="form-control form-control-sm" style="max-width: 400px;">
+          </div>
+          <button id="generate-geometry-model-btn" type="button" class="btn btn-outline-info btn-sm mb-3">Generuj model geometrii</button>
+          <div id="weld-images-preview" class="mb-3" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
+          <div id="geometry-model-container"></div>
+        </div>
         <div id="detailed-speed-section" class="detailed-speed-section"></div>
         <div id="charts-output"></div>
       </div>

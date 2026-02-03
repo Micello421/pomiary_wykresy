@@ -18,13 +18,20 @@
   var generateAggregateBtn = document.getElementById('generate-aggregate-speed-charts-btn');
   var aggregateChartsContainer = document.getElementById('aggregate-charts-container');
   
+  var generateGeometryBtn = document.getElementById('generate-geometry-model-btn');
+  var geometryModelContainer = document.getElementById('geometry-model-container');
+  var weldImagesInput = document.getElementById('weld-images-input');
+  var weldImagesPreview = document.getElementById('weld-images-preview');
+  
   var chartInstances = [];
   var summaryChartInstance = null;
   var aggregateChartInstances = [];
+  var geometryChartInstance = null;
   var fileMeans = {};
   var speedInputsMap = {};
   var fileData = {};
   var detailedChartInstances = [];
+  var weldImages = [];
   
   // Toggle chart section
   toggleBtn.addEventListener('click', function() {
@@ -1497,5 +1504,262 @@
       }
     });
     aggregateChartInstances.push(chart);
+  }
+
+  // Geometry model section
+  weldImagesInput.addEventListener('change', function() {
+    var files = weldImagesInput.files;
+    weldImages = [];
+    weldImagesPreview.innerHTML = '';
+    
+    for (var i = 0; i < files.length; i++) {
+      (function(file) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          weldImages.push({ name: file.name, data: e.target.result });
+          
+          var imgWrapper = document.createElement('div');
+          imgWrapper.style.cssText = 'border: 1px solid #555; border-radius: 6px; overflow: hidden; background: #2b2b2b;';
+          
+          var img = document.createElement('img');
+          img.src = e.target.result;
+          img.style.cssText = 'width: 100%; height: 150px; object-fit: cover;';
+          imgWrapper.appendChild(img);
+          
+          var label = document.createElement('div');
+          label.textContent = file.name;
+          label.style.cssText = 'padding: 6px; font-size: 9pt; color: #ddd; text-align: center;';
+          imgWrapper.appendChild(label);
+          
+          weldImagesPreview.appendChild(imgWrapper);
+        };
+        reader.readAsDataURL(file);
+      })(files[i]);
+    }
+  });
+
+  generateGeometryBtn.addEventListener('click', function() {
+    if (Object.keys(fileData).length === 0) {
+      alert('Najpierw wygeneruj wykresy, aby uzyskać dane pomiarowe.');
+      return;
+    }
+    createGeometryModel();
+  });
+
+  function createGeometryModel() {
+    geometryModelContainer.innerHTML = '';
+    if (geometryChartInstance) {
+      geometryChartInstance.destroy();
+      geometryChartInstance = null;
+    }
+
+    // Collect data: speed -> {mean, stdDev, relativeError}
+    var geometryData = [];
+    var fileList = Object.keys(fileData).sort();
+    
+    for (var f = 0; f < fileList.length; f++) {
+      var filename = fileList[f];
+      var speedValue = speedInputsMap[filename] ? parseFloat(speedInputsMap[filename].value) : 0;
+      if (speedValue <= 0) continue;
+      
+      var values = fileData[filename].values;
+      var mean = calculateMean(values);
+      var stdDev = calculateStdDev(values, mean);
+      var relativeError = (stdDev / mean) * 100;
+      
+      geometryData.push({
+        speed: speedValue,
+        mean: mean,
+        stdDev: stdDev,
+        relativeError: relativeError,
+        filename: filename
+      });
+    }
+
+    if (geometryData.length === 0) {
+      geometryModelContainer.innerHTML = '<p class="text-warning">Brak danych do wyświetlenia. Wprowadź prędkości posuwu.</p>';
+      return;
+    }
+
+    geometryData.sort(function(a, b) { return a.speed - b.speed; });
+
+    // Create container
+    var container = document.createElement('div');
+    container.className = 'mb-4';
+
+    // Images section
+    if (weldImages.length > 0) {
+      var imagesTitle = document.createElement('h6');
+      imagesTitle.className = 'text-light mb-2';
+      imagesTitle.textContent = 'Zdjęcia napoiny';
+      container.appendChild(imagesTitle);
+
+      var imagesGrid = document.createElement('div');
+      imagesGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px;';
+      
+      for (var i = 0; i < weldImages.length; i++) {
+        var imgBox = document.createElement('div');
+        imgBox.style.cssText = 'border: 2px solid #555; border-radius: 8px; overflow: hidden; background: #fff;';
+        
+        var img = document.createElement('img');
+        img.src = weldImages[i].data;
+        img.style.cssText = 'width: 100%; height: auto;';
+        imgBox.appendChild(img);
+        
+        var caption = document.createElement('div');
+        caption.textContent = weldImages[i].name;
+        caption.style.cssText = 'padding: 8px; background: #2b2b2b; color: #ddd; font-size: 10pt; text-align: center;';
+        imgBox.appendChild(caption);
+        
+        imagesGrid.appendChild(imgBox);
+      }
+      container.appendChild(imagesGrid);
+    }
+
+    // Chart title
+    var chartTitle = document.createElement('h6');
+    chartTitle.className = 'text-light mb-3';
+    chartTitle.textContent = 'Model geometrii napoiny: średnia szerokość ± odchylenie standardowe';
+    container.appendChild(chartTitle);
+
+    // Canvas
+    var canvas = document.createElement('canvas');
+    container.appendChild(canvas);
+
+    // Download button
+    var downloadBtn = document.createElement('button');
+    downloadBtn.className = 'btn btn-info btn-sm chart-download-btn mt-3';
+    downloadBtn.textContent = '⬇ Pobierz wykres (JPG)';
+    downloadBtn.onclick = function() {
+      downloadChartAsJPG(canvas, 'model-geometrii-napoiny.jpg');
+    };
+    container.appendChild(downloadBtn);
+
+    // Stats table
+    var statsTitle = document.createElement('h6');
+    statsTitle.className = 'text-light mt-4 mb-2';
+    statsTitle.textContent = 'Tabela analizy błędów';
+    container.appendChild(statsTitle);
+
+    var table = document.createElement('table');
+    table.className = 'table table-dark table-striped table-sm';
+    table.style.cssText = 'font-size: 10pt;';
+    
+    var thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>Plik</th><th>Prędkość [mm/min]</th><th>Średnia [mm]</th><th>Odch. std. [mm]</th><th>Błąd względny [%]</th></tr>';
+    table.appendChild(thead);
+    
+    var tbody = document.createElement('tbody');
+    for (var i = 0; i < geometryData.length; i++) {
+      var d = geometryData[i];
+      var row = document.createElement('tr');
+      row.innerHTML = '<td>' + d.filename + '</td>' +
+                      '<td>' + d.speed.toFixed(1) + '</td>' +
+                      '<td>' + d.mean.toFixed(3) + '</td>' +
+                      '<td>' + d.stdDev.toFixed(3) + '</td>' +
+                      '<td>' + d.relativeError.toFixed(2) + '</td>';
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+    container.appendChild(table);
+
+    geometryModelContainer.appendChild(container);
+
+    // Create chart
+    var speeds = geometryData.map(function(d) { return d.speed; });
+    var means = geometryData.map(function(d) { return d.mean; });
+    var stdDevs = geometryData.map(function(d) { return d.stdDev; });
+
+    var upperBounds = [];
+    var lowerBounds = [];
+    for (var i = 0; i < geometryData.length; i++) {
+      upperBounds.push({ x: speeds[i], y: means[i] + stdDevs[i] });
+      lowerBounds.push({ x: speeds[i], y: Math.max(0, means[i] - stdDevs[i]) });
+    }
+
+    var ctx = canvas.getContext('2d');
+    geometryChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: speeds,
+        datasets: [
+          {
+            label: 'Średnia szerokość',
+            data: means,
+            borderColor: 'rgba(76, 175, 80, 1)',
+            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+            borderWidth: 3,
+            pointRadius: 6,
+            pointBackgroundColor: 'rgba(76, 175, 80, 1)',
+            fill: false
+          },
+          {
+            label: 'Górna granica (μ + σ)',
+            data: upperBounds,
+            borderColor: 'rgba(255, 193, 7, 0.8)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 3,
+            fill: false
+          },
+          {
+            label: 'Dolna granica (μ - σ)',
+            data: lowerBounds,
+            borderColor: 'rgba(255, 193, 7, 0.8)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 3,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Geometria napoiny w funkcji prędkości posuwu',
+            color: '#fff',
+            font: { size: 14 }
+          },
+          legend: {
+            labels: { color: '#fff', font: { size: 11 } }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.parsed.y.toFixed(3) + ' mm';
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Prędkość posuwu [mm/min]',
+              color: '#fff',
+              font: { size: 12 }
+            },
+            ticks: { color: '#ddd' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Szerokość napoiny [mm]',
+              color: '#fff',
+              font: { size: 12 }
+            },
+            ticks: { color: '#ddd' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          }
+        }
+      }
+    });
   }
 })();
