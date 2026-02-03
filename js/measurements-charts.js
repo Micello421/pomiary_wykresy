@@ -1720,25 +1720,31 @@
       var step = span > 0 ? span / 30 : 1;
       if (step === 0) step = 1;
       
-      // Observed range
+      // Calculate polynomial trend for the mean band (not just constant)
+      var trendCoeffs = calculatePolynomialTrendLine(allMeasurements);
+      
+      // Observed range with polynomial trend
       for (var s = minSpeed; s <= maxSpeed; s += step) {
-        meanLine.push({ x: s, y: overallMean });
-        upperBand.push({ x: s, y: overallMean + overallStdDev });
-        lowerBand.push({ x: s, y: Math.max(0, overallMean - overallStdDev) });
+        var trendValue = evaluatePolynomial(trendCoeffs, s);
+        meanLine.push({ x: s, y: trendValue });
+        upperBand.push({ x: s, y: trendValue + overallStdDev });
+        lowerBand.push({ x: s, y: Math.max(0, trendValue - overallStdDev) });
       }
       
       // Left forecast
       for (var sl = minSpeed - extra; sl < (minSpeed - step); sl += step) {
-        forecastLeft.push({ x: sl, y: overallMean });
+        var forecastVal = evaluatePolynomial(trendCoeffs, sl);
+        forecastLeft.push({ x: sl, y: forecastVal });
       }
       
       // Right forecast (with increasing uncertainty)
       for (var sr = maxSpeed + step; sr <= maxSpeed + extra; sr += step) {
         var distFromData = sr - maxSpeed;
         var uncertainty = overallStdDev * (1 + distFromData / span);
-        forecastRightMean.push({ x: sr, y: overallMean });
-        forecastRightUpper.push({ x: sr, y: overallMean + uncertainty });
-        forecastRightLower.push({ x: sr, y: Math.max(0, overallMean - uncertainty) });
+        var forecastVal = evaluatePolynomial(trendCoeffs, sr);
+        forecastRightMean.push({ x: sr, y: forecastVal });
+        forecastRightUpper.push({ x: sr, y: forecastVal + uncertainty });
+        forecastRightLower.push({ x: sr, y: Math.max(0, forecastVal - uncertainty) });
       }
     }
 
