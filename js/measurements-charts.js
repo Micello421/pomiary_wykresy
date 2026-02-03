@@ -1123,7 +1123,9 @@
     var range = getSpeedRange(points);
     var minX = range.min;
     var maxX = range.max;
-    var extra = Math.max(2, (maxX - minX) * 0.25);
+    var span = Math.max(1, (maxX - minX));
+    var extra = Math.max(5, span * 1.0);
+    var forecastMin = minX - extra;
     var forecastMax = maxX + extra;
 
     var observed = [];
@@ -1132,11 +1134,13 @@
     }
 
     var forecast = [];
-    for (var xf = maxX; xf <= forecastMax; xf += step) {
-      forecast.push({ x: xf, y: evaluatePolynomial(xf, coeffs) });
+    for (var xf = forecastMin; xf <= forecastMax; xf += step) {
+      if (xf < minX || xf > maxX) {
+        forecast.push({ x: xf, y: evaluatePolynomial(xf, coeffs) });
+      }
     }
 
-    return { observed: observed, forecast: forecast, minX: minX, maxX: maxX, forecastMax: forecastMax };
+    return { observed: observed, forecast: forecast, minX: minX, maxX: maxX, forecastMin: forecastMin, forecastMax: forecastMax };
   }
 
   function createAggregateSpeedCharts() {
@@ -1354,7 +1358,7 @@
     
     var upperLines = [];
     var lowerLines = [];
-    for (var s = trendData.minX; s <= trendData.forecastMax; s += 0.5) {
+    for (var s = trendData.forecastMin; s <= trendData.forecastMax; s += 0.5) {
       upperLines.push({ x: s, y: upperBound });
       lowerLines.push({ x: s, y: lowerBound });
     }
