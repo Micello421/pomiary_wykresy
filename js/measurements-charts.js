@@ -1728,6 +1728,11 @@
       }
       var trendCoeffs = calculatePolynomialTrendLine(trendData);
       
+      // Fallback to constant mean if polynomial calculation fails
+      if (!trendCoeffs || trendCoeffs.length === 0) {
+        trendCoeffs = [overallMean, 0, 0]; // Constant line
+      }
+      
       // Observed range with polynomial trend
       for (var s = minSpeed; s <= maxSpeed; s += step) {
         var trendValue = evaluatePolynomial(trendCoeffs, s);
