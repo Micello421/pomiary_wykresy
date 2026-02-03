@@ -83,7 +83,7 @@
       alert('Generate mean vs speed chart first.');
       return;
     }
-    downloadChartAsPNG(speedSummaryCanvas, 'mean-vs-speed.png');
+    downloadChartAsJPG(speedSummaryCanvas, 'mean-vs-speed.jpg');
   });
 
   var downloadHistogramsBtn = document.getElementById('download-histograms-btn');
@@ -241,9 +241,9 @@
     downloadAllBtn.className = 'btn btn-success btn-sm';
     downloadAllBtn.textContent = '⬇ Pobierz wszystkie wykresy';
     downloadAllBtn.onclick = function() {
-      downloadChartAsPNG(histCanvas, filename + '_histogram.png');
+      downloadChartAsJPG(histCanvas, filename + '_histogram.jpg');
       setTimeout(function() {
-        downloadChartAsPNG(scatterCanvas, filename + '_scatter.png');
+        downloadChartAsJPG(scatterCanvas, filename + '_scatter.jpg');
       }, 100);
     };
     titleWrapper.appendChild(downloadAllBtn);
@@ -277,9 +277,9 @@
     histContainer.appendChild(histTitle);
     var histDownloadBtn = document.createElement('button');
     histDownloadBtn.className = 'btn btn-info btn-sm chart-download-btn';
-    histDownloadBtn.textContent = '⬇ Pobierz histogram (PNG)';
+    histDownloadBtn.textContent = '⬇ Pobierz histogram (JPG)';
     histDownloadBtn.onclick = function() {
-      downloadChartAsPNG(histCanvas, filename + '_histogram.png');
+      downloadChartAsJPG(histCanvas, filename + '_histogram.jpg');
     };
     histContainer.appendChild(histDownloadBtn);
     
@@ -318,9 +318,9 @@
     var trendLine = calculateTrendLine(indices, values);
     var scatterDownloadBtn = document.createElement('button');
     scatterDownloadBtn.className = 'btn btn-info btn-sm chart-download-btn';
-    scatterDownloadBtn.textContent = '⬇ Pobierz wykres rozproszenia (PNG)';
+    scatterDownloadBtn.textContent = '⬇ Pobierz wykres rozproszenia (JPG)';
     scatterDownloadBtn.onclick = function() {
-      downloadChartAsPNG(scatterCanvas, filename + '_scatter.png');
+      downloadChartAsJPG(scatterCanvas, filename + '_scatter.jpg');
     };
     scatterContainer.appendChild(scatterDownloadBtn);
     
@@ -630,10 +630,22 @@
   }
   
   
-  function downloadChartAsPNG(canvas, filename) {
+  function downloadChartAsJPG(canvas, filename, options) {
+    var opts = options || {};
+    var background = opts.background || '#ffffff';
+    var quality = typeof opts.quality === 'number' ? opts.quality : 0.95;
+    var exportCanvas = document.createElement('canvas');
+    exportCanvas.width = canvas.width;
+    exportCanvas.height = canvas.height;
+
+    var exportCtx = exportCanvas.getContext('2d');
+    exportCtx.fillStyle = background;
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    exportCtx.drawImage(canvas, 0, 0);
+
     var link = document.createElement('a');
     link.download = filename;
-    link.href = canvas.toDataURL('image/png');
+    link.href = exportCanvas.toDataURL('image/jpeg', quality);
     link.click();
   }
 
@@ -646,7 +658,7 @@
       var canvas = chartInstances[i].canvas;
       var fileIndex = Math.floor(i / 2) + 1;
       var isHistogram = (i % 2 === 0);
-      var filename = 'plik' + fileIndex + (isHistogram ? '_histogram' : '_scatter') + '.png';
+      var filename = 'plik' + fileIndex + (isHistogram ? '_histogram' : '_scatter') + '.jpg';
       chartsToDownload.push({ canvas: canvas, name: filename });
     }
     
@@ -659,7 +671,7 @@
     for (var i = 0; i < chartsToDownload.length; i++) {
       (function(item, index) {
         setTimeout(function() {
-          downloadChartAsPNG(item.canvas, item.name);
+          downloadChartAsJPG(item.canvas, item.name);
         }, index * delay);
       })(chartsToDownload[i], i);
     }
@@ -673,16 +685,16 @@
     
     // 1. Speed summary chart
     if (summaryChartInstance) {
-      chartsToDownload.push({ canvas: speedSummaryCanvas, name: '01_srednia-vs-posuw.png' });
+      chartsToDownload.push({ canvas: speedSummaryCanvas, name: '01_srednia-vs-posuw.jpg' });
     }
     
     // 2. Aggregate charts
     for (var i = 0; i < aggregateChartInstances.length; i++) {
       var canvas = aggregateChartInstances[i].canvas;
       if (i === 0) {
-        chartsToDownload.push({ canvas: canvas, name: '02_wszystkie_pomiary_anomalies.png' });
+        chartsToDownload.push({ canvas: canvas, name: '02_wszystkie_pomiary_anomalies.jpg' });
       } else if (i === 1) {
-        chartsToDownload.push({ canvas: canvas, name: '03_wszystkie_pomiary_intervals.png' });
+        chartsToDownload.push({ canvas: canvas, name: '03_wszystkie_pomiary_intervals.jpg' });
       }
     }
     
@@ -691,7 +703,7 @@
       var canvas = detailedChartInstances[i].canvas;
       var fileIndex = Math.floor(i / 2) + 1;
       var isAnomalies = (i % 2 === 0);
-      var filename = '04_plik' + fileIndex + (isAnomalies ? '_anomalies' : '_intervals') + '.png';
+      var filename = '04_plik' + fileIndex + (isAnomalies ? '_anomalies' : '_intervals') + '.jpg';
       chartsToDownload.push({ canvas: canvas, name: filename });
     }
     
@@ -704,7 +716,7 @@
     for (var i = 0; i < chartsToDownload.length; i++) {
       (function(item, index) {
         setTimeout(function() {
-          downloadChartAsPNG(item.canvas, item.name);
+          downloadChartAsJPG(item.canvas, item.name);
         }, index * delay);
       })(chartsToDownload[i], i);
     }
@@ -768,7 +780,7 @@
       downloadBtn1.textContent = '⬇ Pobierz';
       (function(c) {
         downloadBtn1.onclick = function() {
-          downloadChartAsPNG(c, filename.replace('.csv', '') + '_anomalies.png');
+          downloadChartAsJPG(c, filename.replace('.csv', '') + '_anomalies.jpg');
         };
       })(canvas1);
       chart1Div.appendChild(downloadBtn1);
@@ -791,7 +803,7 @@
       downloadBtn2.textContent = '⬇ Pobierz';
       (function(c) {
         downloadBtn2.onclick = function() {
-          downloadChartAsPNG(c, filename.replace('.csv', '') + '_intervals.png');
+          downloadChartAsJPG(c, filename.replace('.csv', '') + '_intervals.jpg');
         };
       })(canvas2);
       chart2Div.appendChild(downloadBtn2);
@@ -1092,6 +1104,41 @@
     return coeffs.a * x * x + coeffs.b * x + coeffs.c;
   }
 
+  function getSpeedRange(points) {
+    var min = Infinity;
+    var max = -Infinity;
+    for (var i = 0; i < points.length; i++) {
+      var x = points[i].x;
+      if (x < min) { min = x; }
+      if (x > max) { max = x; }
+    }
+    if (!isFinite(min) || !isFinite(max)) {
+      min = 0;
+      max = 0;
+    }
+    return { min: min, max: max };
+  }
+
+  function buildTrendAndForecastLines(points, coeffs, step) {
+    var range = getSpeedRange(points);
+    var minX = range.min;
+    var maxX = range.max;
+    var extra = Math.max(2, (maxX - minX) * 0.25);
+    var forecastMax = maxX + extra;
+
+    var observed = [];
+    for (var x = minX; x <= maxX; x += step) {
+      observed.push({ x: x, y: evaluatePolynomial(x, coeffs) });
+    }
+
+    var forecast = [];
+    for (var xf = maxX; xf <= forecastMax; xf += step) {
+      forecast.push({ x: xf, y: evaluatePolynomial(xf, coeffs) });
+    }
+
+    return { observed: observed, forecast: forecast, minX: minX, maxX: maxX, forecastMax: forecastMax };
+  }
+
   function createAggregateSpeedCharts() {
     aggregateChartsContainer.innerHTML = '';
     for (var i = 0; i < aggregateChartInstances.length; i++) {
@@ -1144,7 +1191,7 @@
     downloadBtn1.textContent = '⬇ Pobierz';
     (function(c) {
       downloadBtn1.onclick = function() {
-        downloadChartAsPNG(c, 'wszystkie_pomiary_anomalies.png');
+        downloadChartAsJPG(c, 'wszystkie_pomiary_anomalies.jpg');
       };
     })(canvas1);
     chart1Div.appendChild(downloadBtn1);
@@ -1167,7 +1214,7 @@
     downloadBtn2.textContent = '⬇ Pobierz';
     (function(c) {
       downloadBtn2.onclick = function() {
-        downloadChartAsPNG(c, 'wszystkie_pomiary_intervals.png');
+        downloadChartAsJPG(c, 'wszystkie_pomiary_intervals.jpg');
       };
     })(canvas2);
     chart2Div.appendChild(downloadBtn2);
@@ -1197,11 +1244,8 @@
     var ys = points.map(function(p) { return p.y; });
     var polyCoeffs = calculatePolynomialTrendLine(xs, ys);
 
-    // Generate smooth curve with many points
-    var trendLines = [];
-    for (var s = 10; s <= 30; s += 0.5) {
-      trendLines.push({ x: s, y: evaluatePolynomial(s, polyCoeffs) });
-    }
+    // Generate smooth curve with many points + forecast
+    var trendData = buildTrendAndForecastLines(points, polyCoeffs, 0.5);
 
     var ctx = canvas.getContext('2d');
     var chart = new Chart(ctx, {
@@ -1227,12 +1271,23 @@
           },
           {
             label: 'Trend',
-            data: trendLines,
+            data: trendData.observed,
             type: 'line',
             borderColor: 'rgba(76, 175, 80, 1)',
             backgroundColor: 'transparent',
             borderWidth: 2.5,
             pointRadius: 0,
+            tension: 0.4
+          },
+          {
+            label: 'Prognoza (trend)',
+            data: trendData.forecast,
+            type: 'line',
+            borderColor: 'rgba(255, 193, 7, 0.95)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 0,
+            borderDash: [6, 4],
             tension: 0.4
           }
         ]
@@ -1294,15 +1349,12 @@
     var ys = points.map(function(p) { return p.y; });
     var polyCoeffs = calculatePolynomialTrendLine(xs, ys);
 
-    // Generate smooth curve with many points
-    var trendLines = [];
-    for (var s = 10; s <= 30; s += 0.5) {
-      trendLines.push({ x: s, y: evaluatePolynomial(s, polyCoeffs) });
-    }
+    // Generate smooth curve with many points + forecast
+    var trendData = buildTrendAndForecastLines(points, polyCoeffs, 0.5);
     
     var upperLines = [];
     var lowerLines = [];
-    for (var s = 10; s <= 30; s += 0.5) {
+    for (var s = trendData.minX; s <= trendData.forecastMax; s += 0.5) {
       upperLines.push({ x: s, y: upperBound });
       lowerLines.push({ x: s, y: lowerBound });
     }
@@ -1322,12 +1374,23 @@
           },
           {
             label: 'Trend',
-            data: trendLines,
+            data: trendData.observed,
             type: 'line',
             borderColor: 'rgba(76, 175, 80, 1)',
             backgroundColor: 'transparent',
             borderWidth: 2.5,
             pointRadius: 0,
+            tension: 0.4
+          },
+          {
+            label: 'Prognoza (trend)',
+            data: trendData.forecast,
+            type: 'line',
+            borderColor: 'rgba(255, 193, 7, 0.95)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointRadius: 0,
+            borderDash: [6, 4],
             tension: 0.4
           },
           {
