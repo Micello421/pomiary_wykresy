@@ -9,8 +9,8 @@ function AugenmassModel() {
   // -- editing operation. We start a line and eventually commit or forget it.
 
   // Start a new line but does not add it to the model yet.
-  this.startEditLine = function (x, y) {
-    var line = new Line(x, y, x, y);
+  this.startEditLine = function (x, y, is_scale) {
+    var line = new Line(x, y, x, y, is_scale);
     this.current_line_ = line;
     this.current_angle_ = this.addAngle(line.p1, line.p2, line);
   };

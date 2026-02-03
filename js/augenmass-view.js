@@ -52,6 +52,9 @@ function AugenmassView(canvas) {
       this.measure_canvas_.height
     );
     this.drawAllNoClear(this.measure_ctx_);
+    if (typeof update_measurements_table === "function") {
+      update_measurements_table();
+    }
   };
 
   this.highlightLine = function (line) {
@@ -65,21 +68,23 @@ function AugenmassView(canvas) {
   };
 
   this.drawAllNoClear = function (ctx) {
-    this.measure_ctx_.font = "bold " + length_font_pixels + "px Sans Serif";
+    ctx.font = "bold " + length_font_pixels + "px Sans Serif";
     var length_factor = this.print_factor_;
     var show_deltas = this.show_deltas_;
     this.model_.forAllLines(function (line) {
       drawMeasureLine(ctx, line, length_factor, show_deltas, false);
+      drawLineAngle(ctx, line);
     });
     if (this.model_.hasEditLine()) {
       var line = this.model_.getEditLine();
       drawEditline(ctx, line, this.print_factor_);
+      drawLineAngle(ctx, line);
       if (this.show_deltas_) {
         drawDeltaLine(ctx, line, this.print_factor_);
       }
     }
     if (this.show_angles_) {
-      this.measure_ctx_.font = angle_font_pixels + "px Sans Serif";
+      ctx.font = angle_font_pixels + "px Sans Serif";
       // Radius_fudge makes the radius of the arc slighly different
       // for all angles around one center so that they are easier
       // to distinguish.
@@ -206,7 +211,9 @@ function AugenmassView(canvas) {
 
     // Background for t-line
     ctx.beginPath();
-    ctx.strokeStyle = background_line_style;
+    ctx.strokeStyle = line.is_scale
+      ? background_scale_line_style
+      : background_line_style;
     ctx.lineWidth = background_line_width;
     ctx.lineCap = "round";
     drawT(ctx, line.p1.x, line.p1.y, line.p2.x, line.p2.y, end_bracket_len);
@@ -232,14 +239,14 @@ function AugenmassView(canvas) {
 
     // ... and actual line.
     ctx.beginPath();
-    ctx.strokeStyle = "#00F";
+    ctx.strokeStyle = line.is_scale ? scale_line_style : "#00F";
     ctx.lineWidth = 1;
     ctx.moveTo(line.p1.x, line.p1.y);
     ctx.lineTo(line.p1.x + dx, line.p1.y + dy);
     ctx.stroke();
 
     if (pixel_len >= 2) {
-      var print_text = (length_factor * pixel_len).toPrecision(4);
+      var print_text = (length_factor * pixel_len).toPrecision(4) + " mm";
       var text_len = ctx.measureText(print_text).width + 2 * length_font_pixels;
       // Print label.
       // White background for text. We're using a short line, so that we
@@ -262,23 +269,25 @@ function AugenmassView(canvas) {
 
   // General draw of a measuring line.
   function drawMeasureLine(ctx, line, length_factor, show_deltas, highlight) {
-    var print_text = (length_factor * line.length()).toPrecision(4);
+    var print_text = (length_factor * line.length()).toPrecision(4) + " mm";
     if (show_deltas && line.p1.x != line.p2.x && line.p1.y != line.p2.y) {
       var dx = length_factor * (line.p2.x - line.p1.x);
       var dy = length_factor * (line.p1.y - line.p2.y);
       print_text +=
         "; \u0394=(" +
         Math.abs(dx).toPrecision(4) +
-        ", " +
+        " mm, " +
         Math.abs(dy).toPrecision(4) +
-        ")";
+        " mm)";
     }
     ctx.beginPath();
     // Some contrast background.
     if (highlight) {
       ctx.strokeStyle = background_highlight_line_style;
     } else {
-      ctx.strokeStyle = background_line_style;
+      ctx.strokeStyle = line.is_scale
+        ? background_scale_line_style
+        : background_line_style;
     }
     ctx.lineWidth = background_line_width;
     ctx.lineCap = "round";
@@ -293,7 +302,7 @@ function AugenmassView(canvas) {
     if (highlight) {
       ctx.strokeStyle = highlight_line_style;
     } else {
-      ctx.strokeStyle = line_style;
+      ctx.strokeStyle = line.is_scale ? scale_line_style : line_style;
     }
     ctx.lineWidth = 1;
     ctx.moveTo(line.p1.x, line.p1.y);
@@ -368,7 +377,7 @@ function AugenmassView(canvas) {
     else if (dx >= 0 && dx < 80) hor_align = "left";
     writeLabel(
       ctx,
-      hor_len.toPrecision(4),
+      hor_len.toPrecision(4) + " mm",
       (line.p1.x + line.p2.x) / 2,
       line.p1.y + (dy > 0 ? -20 : 20),
       hor_align
@@ -376,10 +385,29 @@ function AugenmassView(canvas) {
     var vert_len = length_factor * Math.abs(dy);
     writeLabel(
       ctx,
-      vert_len.toPrecision(4),
+      vert_len.toPrecision(4) + " mm",
       line.p2.x + (dx > 0 ? 10 : -10),
       (line.p1.y + line.p2.y) / 2,
       line.p1.x < line.p2.x ? "left" : "right"
     );
+  }
+
+  function drawLineAngle(ctx, line) {
+    var dx = line.p2.x - line.p1.x;
+    var dy = line.p2.y - line.p1.y;
+    var angle_rad = Math.atan2(dy, dx);
+    var angle_deg = (angle_rad * 180) / Math.PI;
+    if (angle_deg < 0) angle_deg += 360;
+
+    var mid_x = (line.p1.x + line.p2.x) / 2;
+    var mid_y = (line.p1.y + line.p2.y) / 2;
+
+    ctx.save();
+    ctx.font = "10px Sans Serif";
+    ctx.fillStyle = "#ff6b00";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(angle_deg.toFixed(1) + "°", mid_x, mid_y - 15);
+    ctx.restore();
   }
 }

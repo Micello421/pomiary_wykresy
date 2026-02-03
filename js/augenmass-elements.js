@@ -17,11 +17,12 @@ function Point(x, y) {
   this.update(x, y);
 }
 
-function Line(x1, y1, x2, y2) {
+function Line(x1, y1, x2, y2, is_scale) {
   // The canvas coordinate system numbers the space _between_ pixels
   // as full coordinage. Correct for that.
   this.p1 = new Point(x1 + 0.5, y1 + 0.5);
   this.p2 = new Point(x2 + 0.5, y2 + 0.5);
+  this.is_scale = is_scale === true;
 
   // While editing: updating second end of the line.
   this.updatePos = function (x2, y2) {
