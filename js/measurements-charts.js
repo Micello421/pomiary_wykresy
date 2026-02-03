@@ -1127,18 +1127,19 @@
     var extra = Math.max(2, span * 0.25);
     var forecastMin = minX - extra;
     var forecastMax = maxX + extra;
-    var margin = Math.max(0.1, step);
-
     var observed = [];
     for (var x = minX; x <= maxX; x += step) {
       observed.push({ x: x, y: evaluatePolynomial(x, coeffs) });
     }
 
     var forecast = [];
-    for (var xf = forecastMin; xf <= forecastMax; xf += step) {
-      if (xf <= (minX - margin) || xf >= (maxX + margin)) {
-        forecast.push({ x: xf, y: evaluatePolynomial(xf, coeffs) });
-      }
+    // Left side (before observed range)
+    for (var xl = forecastMin; xl <= (minX - step); xl += step) {
+      forecast.push({ x: xl, y: evaluatePolynomial(xl, coeffs) });
+    }
+    // Right side (after observed range)
+    for (var xr = (maxX + step); xr <= forecastMax; xr += step) {
+      forecast.push({ x: xr, y: evaluatePolynomial(xr, coeffs) });
     }
 
     return { observed: observed, forecast: forecast, minX: minX, maxX: maxX, forecastMin: forecastMin, forecastMax: forecastMax };
