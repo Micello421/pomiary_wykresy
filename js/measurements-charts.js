@@ -1721,7 +1721,12 @@
       if (step === 0) step = 1;
       
       // Calculate polynomial trend for the mean band (not just constant)
-      var trendCoeffs = calculatePolynomialTrendLine(allMeasurements);
+      // Format data for polynomial calculation
+      var trendData = [];
+      for (var i = 0; i < allMeasurements.length; i++) {
+        trendData.push({ speed: allMeasurements[i].speed, value: allMeasurements[i].value });
+      }
+      var trendCoeffs = calculatePolynomialTrendLine(trendData);
       
       // Observed range with polynomial trend
       for (var s = minSpeed; s <= maxSpeed; s += step) {
