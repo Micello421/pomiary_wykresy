@@ -1636,10 +1636,23 @@
     };
     mainContainer.appendChild(downloadChartBtn);
 
+    // Detailed error analysis description
+    var analysisDesc = document.createElement('div');
+    analysisDesc.className = 'stats-box mt-4 mb-3';
+    analysisDesc.innerHTML = '<strong>Wyjaśnienie analizy błędu:</strong><br>' +
+      '<small style="color: #ddd; line-height: 1.6;">' +
+      '<strong>• Dane obserwowane:</strong> Linia zielona to średnia globalna (μ) ze wszystkich pomiarów. Pasmo żółte (±σ) pokazuje zakres jednego odchylenia standardowego - obszar, w którym leży ~68% danych.<br>' +
+      '<strong>• Odchylenie standardowe (σ):</strong> σ = ' + overallStdDev.toFixed(3) + ' mm - miara zmienności pomiarów wokół średniej.<br>' +
+      '<strong>• Błąd względny:</strong> (' + overallRelativeError.toFixed(2) + '%) = (σ/μ)×100% - pokazuje błąd jako procent średniej.<br>' +
+      '<strong>• Prognoza (linie przerywane):</strong> Linie purpurowe to przedłużenie średniej poza zakres pomiarów.<br>' +
+      '<strong>• Pasmo prognozy (różowe):</strong> Niepewność rośnie wraz z oddaleniem od danych obserwowanych. Im dalej od danych, tym większa niepewność (linia robi się szersza).' +
+      '</small></div>';
+    mainContainer.appendChild(analysisDesc);
+
     // Stats table
     var statsTitle = document.createElement('h6');
     statsTitle.className = 'text-light mt-4 mb-2';
-    statsTitle.textContent = 'Tabela analizy błędów pomiarowych';
+    statsTitle.textContent = 'Tabela analizy błędów pomiarowych (statystyki per plik)';
     mainContainer.appendChild(statsTitle);
 
     var table = document.createElement('table');
@@ -1694,17 +1707,38 @@
     var meanLine = [];
     var upperBand = [];
     var lowerBand = [];
+    var forecastLeft = [];
+    var forecastRightMean = [];
+    var forecastRightUpper = [];
+    var forecastRightLower = [];
     
     if (speeds.length > 0) {
       var minSpeed = Math.min.apply(null, speeds);
       var maxSpeed = Math.max.apply(null, speeds);
-      var step = (maxSpeed - minSpeed) / 20;
+      var span = maxSpeed - minSpeed;
+      var extra = Math.max(5, span * 0.5);
+      var step = span > 0 ? span / 30 : 1;
       if (step === 0) step = 1;
       
+      // Observed range
       for (var s = minSpeed; s <= maxSpeed; s += step) {
         meanLine.push({ x: s, y: overallMean });
         upperBand.push({ x: s, y: overallMean + overallStdDev });
         lowerBand.push({ x: s, y: Math.max(0, overallMean - overallStdDev) });
+      }
+      
+      // Left forecast
+      for (var sl = minSpeed - extra; sl < (minSpeed - step); sl += step) {
+        forecastLeft.push({ x: sl, y: overallMean });
+      }
+      
+      // Right forecast (with increasing uncertainty)
+      for (var sr = maxSpeed + step; sr <= maxSpeed + extra; sr += step) {
+        var distFromData = sr - maxSpeed;
+        var uncertainty = overallStdDev * (1 + distFromData / span);
+        forecastRightMean.push({ x: sr, y: overallMean });
+        forecastRightUpper.push({ x: sr, y: overallMean + uncertainty });
+        forecastRightLower.push({ x: sr, y: Math.max(0, overallMean - uncertainty) });
       }
     }
 
@@ -1722,32 +1756,72 @@
             pointRadius: 4
           },
           {
-            label: 'Średnia globalna (μ)',
+            label: 'Średnia globalna (μ) - dane obserwowane',
             data: meanLine,
             type: 'line',
             borderColor: 'rgba(76, 175, 80, 1)',
             backgroundColor: 'transparent',
-            borderWidth: 2.5,
+            borderWidth: 3,
             pointRadius: 0
           },
           {
-            label: 'Górna granica (μ + σ)',
+            label: 'Pasmo +σ (dane obserwowane)',
             data: upperBand,
             type: 'line',
             borderColor: 'rgba(255, 193, 7, 0.8)',
             backgroundColor: 'transparent',
-            borderWidth: 2,
+            borderWidth: 1.5,
             borderDash: [5, 5],
             pointRadius: 0
           },
           {
-            label: 'Dolna granica (μ - σ)',
+            label: 'Pasmo -σ (dane obserwowane)',
             data: lowerBand,
             type: 'line',
             borderColor: 'rgba(255, 193, 7, 0.8)',
             backgroundColor: 'transparent',
-            borderWidth: 2,
+            borderWidth: 1.5,
             borderDash: [5, 5],
+            pointRadius: 0
+          },
+          {
+            label: 'Prognoza (lewa)',
+            data: forecastLeft,
+            type: 'line',
+            borderColor: 'rgba(156, 39, 176, 0.9)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [8, 4],
+            pointRadius: 0
+          },
+          {
+            label: 'Prognoza (prawa)',
+            data: forecastRightMean,
+            type: 'line',
+            borderColor: 'rgba(156, 39, 176, 0.9)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [8, 4],
+            pointRadius: 0
+          },
+          {
+            label: 'Pasmo prognozy +σ (z rosnącą niepewnością)',
+            data: forecastRightUpper,
+            type: 'line',
+            borderColor: 'rgba(233, 30, 99, 0.6)',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [3, 3],
+            pointRadius: 0
+          },
+          {
+            label: 'Pasmo prognozy -σ (z rosnącą niepewnością)',
+            data: forecastRightLower,
+            type: 'line',
+            borderColor: 'rgba(233, 30, 99, 0.6)',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [3, 3],
             pointRadius: 0
           }
         ]
@@ -1755,16 +1829,17 @@
       options: {
         responsive: true,
         maintainAspectRatio: true,
-        aspectRatio: 2,
+        aspectRatio: 2.2,
         plugins: {
           title: {
             display: true,
-            text: 'Wszystkie pomiary napoiny z analizą błędu globalnego',
+            text: 'Wszystkie pomiary z prognozą i analizą błędu',
             color: '#fff',
-            font: { size: 14 }
+            font: { size: 14, weight: 'bold' }
           },
           legend: {
-            labels: { color: '#fff', font: { size: 11 } }
+            labels: { color: '#fff', font: { size: 10 } },
+            position: 'bottom'
           },
           tooltip: {
             callbacks: {
@@ -1778,9 +1853,9 @@
           x: {
             title: {
               display: true,
-              text: 'Prędkość posuwu [mm/min]',
+              text: 'Prędkość posuwu [mm/min] | Dane obserwowane | Prognoza',
               color: '#fff',
-              font: { size: 12 }
+              font: { size: 12, weight: 'bold' }
             },
             ticks: { color: '#ddd' },
             grid: { color: 'rgba(255, 255, 255, 0.1)' }
@@ -1790,7 +1865,7 @@
               display: true,
               text: 'Szerokość napoiny [mm]',
               color: '#fff',
-              font: { size: 12 }
+              font: { size: 12, weight: 'bold' }
             },
             ticks: { color: '#ddd' },
             grid: { color: 'rgba(255, 255, 255, 0.1)' }
