@@ -1519,20 +1519,21 @@
     }
     geometryChartInstances = [];
 
-    // Collect data: speed -> {mean, stdDev, relativeError}
+    // Collect ALL measurements from all files
+    var allMeasurements = [];
     var geometryData = [];
     var fileList = Object.keys(fileData).sort();
     
     for (var f = 0; f < fileList.length; f++) {
       var filename = fileList[f];
       var speedValue = speedInputsMap[filename] ? parseFloat(speedInputsMap[filename].value) : 0;
-      if (speedValue <= 0) continue;
       
       var values = fileData[filename].values;
       var mean = calculateMean(values);
       var stdDev = calculateStdDev(values, mean);
       var relativeError = (stdDev / mean) * 100;
       
+      // Add to per-file data
       geometryData.push({
         speed: speedValue,
         mean: mean,
@@ -1541,18 +1542,47 @@
         filename: filename,
         n: values.length
       });
+
+      // Add all measurements to global collection
+      for (var v = 0; v < values.length; v++) {
+        allMeasurements.push({
+          value: values[v],
+          speed: speedValue,
+          filename: filename
+        });
+      }
     }
 
-    if (geometryData.length === 0) {
-      geometryModelContainer.innerHTML = '<p class="text-warning">Brak danych do wyświetlenia. Wprowadź prędkości posuwu.</p>';
+    if (allMeasurements.length === 0) {
+      geometryModelContainer.innerHTML = '<p class="text-warning">Brak danych do wyświetlenia. Najpierw wygeneruj wykresy.</p>';
       return;
     }
 
     geometryData.sort(function(a, b) { return a.speed - b.speed; });
 
+    // Calculate overall statistics
+    var allValues = allMeasurements.map(function(m) { return m.value; });
+    var overallMean = calculateMean(allValues);
+    var overallStdDev = calculateStdDev(allValues, overallMean);
+    var overallRelativeError = (overallStdDev / overallMean) * 100;
+    var minValue = Math.min.apply(null, allValues);
+    var maxValue = Math.max.apply(null, allValues);
+
     // Create main container
     var mainContainer = document.createElement('div');
     mainContainer.className = 'mb-4';
+
+    // Overall statistics summary
+    var summaryBox = document.createElement('div');
+    summaryBox.className = 'stats-box mb-4';
+    summaryBox.innerHTML = '<strong>Statystyki globalne:</strong> ' +
+                          'n = ' + allMeasurements.length + 
+                          ' | μ = ' + overallMean.toFixed(3) + ' mm' +
+                          ' | σ = ' + overallStdDev.toFixed(3) + ' mm' +
+                          ' | Błąd wzgl. = ' + overallRelativeError.toFixed(2) + '%' +
+                          ' | min = ' + minValue.toFixed(3) + ' mm' +
+                          ' | max = ' + maxValue.toFixed(3) + ' mm';
+    mainContainer.appendChild(summaryBox);
 
     // Weld geometry visualization (cross-sections)
     var visualTitle = document.createElement('h6');
@@ -1572,10 +1602,27 @@
     };
     mainContainer.appendChild(downloadVisualBtn);
 
-    // Chart: Mean width vs Speed with error bars
+    // Chart 1: All measurements scatter with mean and error bands
+    var scatterTitle = document.createElement('h6');
+    scatterTitle.className = 'text-light mb-3 mt-4';
+    scatterTitle.textContent = 'Wszystkie pomiary z analizą błędu (średnia globalna ± σ)';
+    mainContainer.appendChild(scatterTitle);
+
+    var scatterCanvas = document.createElement('canvas');
+    mainContainer.appendChild(scatterCanvas);
+
+    var downloadScatterBtn = document.createElement('button');
+    downloadScatterBtn.className = 'btn btn-info btn-sm chart-download-btn mt-2 mb-4';
+    downloadScatterBtn.textContent = '⬇ Pobierz wykres rozproszenia (JPG)';
+    downloadScatterBtn.onclick = function() {
+      downloadChartAsJPG(scatterCanvas, 'wszystkie-pomiary-geometria.jpg');
+    };
+    mainContainer.appendChild(downloadScatterBtn);
+
+    // Chart 2: Mean width vs Speed with error bars
     var chartTitle = document.createElement('h6');
     chartTitle.className = 'text-light mb-3 mt-4';
-    chartTitle.textContent = 'Średnia szerokość napoiny ± odchylenie standardowe';
+    chartTitle.textContent = 'Średnia szerokość napoiny per prędkość ± odchylenie standardowe';
     mainContainer.appendChild(chartTitle);
 
     var chartCanvas = document.createElement('canvas');
@@ -1608,7 +1655,7 @@
       var d = geometryData[i];
       var row = document.createElement('tr');
       row.innerHTML = '<td>' + d.filename + '</td>' +
-                      '<td>' + d.speed.toFixed(1) + '</td>' +
+                      '<td>' + (d.speed > 0 ? d.speed.toFixed(1) : 'N/A') + '</td>' +
                       '<td>' + d.n + '</td>' +
                       '<td>' + d.mean.toFixed(3) + '</td>' +
                       '<td>' + d.stdDev.toFixed(3) + '</td>' +
@@ -1623,8 +1670,135 @@
     // Create weld cross-section visualization
     createWeldVisualization(visualCanvas, geometryData);
 
-    // Create chart with error bars
+    // Create scatter plot with all measurements
+    createAllMeasurementsScatter(scatterCanvas, allMeasurements, overallMean, overallStdDev);
+
+    // Create chart with error bars per speed
     createGeometryChart(chartCanvas, geometryData);
+  }
+
+  function createAllMeasurementsScatter(canvas, allMeasurements, overallMean, overallStdDev) {
+    var scatterData = allMeasurements.map(function(m) {
+      return { x: m.speed, y: m.value };
+    });
+
+    var speeds = [];
+    for (var i = 0; i < allMeasurements.length; i++) {
+      var s = allMeasurements[i].speed;
+      if (speeds.indexOf(s) === -1 && s > 0) {
+        speeds.push(s);
+      }
+    }
+    speeds.sort(function(a, b) { return a - b; });
+
+    var meanLine = [];
+    var upperBand = [];
+    var lowerBand = [];
+    
+    if (speeds.length > 0) {
+      var minSpeed = Math.min.apply(null, speeds);
+      var maxSpeed = Math.max.apply(null, speeds);
+      var step = (maxSpeed - minSpeed) / 20;
+      if (step === 0) step = 1;
+      
+      for (var s = minSpeed; s <= maxSpeed; s += step) {
+        meanLine.push({ x: s, y: overallMean });
+        upperBand.push({ x: s, y: overallMean + overallStdDev });
+        lowerBand.push({ x: s, y: Math.max(0, overallMean - overallStdDev) });
+      }
+    }
+
+    var ctx = canvas.getContext('2d');
+    var chart = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Wszystkie pomiary',
+            data: scatterData,
+            backgroundColor: 'rgba(70, 130, 180, 0.5)',
+            borderColor: 'rgba(70, 130, 180, 1)',
+            borderWidth: 0.5,
+            pointRadius: 4
+          },
+          {
+            label: 'Średnia globalna (μ)',
+            data: meanLine,
+            type: 'line',
+            borderColor: 'rgba(76, 175, 80, 1)',
+            backgroundColor: 'transparent',
+            borderWidth: 2.5,
+            pointRadius: 0
+          },
+          {
+            label: 'Górna granica (μ + σ)',
+            data: upperBand,
+            type: 'line',
+            borderColor: 'rgba(255, 193, 7, 0.8)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 0
+          },
+          {
+            label: 'Dolna granica (μ - σ)',
+            data: lowerBand,
+            type: 'line',
+            borderColor: 'rgba(255, 193, 7, 0.8)',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Wszystkie pomiary napoiny z analizą błędu globalnego',
+            color: '#fff',
+            font: { size: 14 }
+          },
+          legend: {
+            labels: { color: '#fff', font: { size: 11 } }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.dataset.label + ': ' + context.parsed.y.toFixed(3) + ' mm';
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Prędkość posuwu [mm/min]',
+              color: '#fff',
+              font: { size: 12 }
+            },
+            ticks: { color: '#ddd' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Szerokość napoiny [mm]',
+              color: '#fff',
+              font: { size: 12 }
+            },
+            ticks: { color: '#ddd' },
+            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+          }
+        }
+      }
+    });
+    geometryChartInstances.push(chart);
   }
 
   function createWeldVisualization(canvas, geometryData) {

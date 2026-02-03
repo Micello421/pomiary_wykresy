@@ -359,6 +359,12 @@
         <button id="chart-close-btn" type="button" class="btn btn-secondary btn-sm ms-auto">Close</button>
       </div>
       <div id="chart-body">
+        <div id="geometry-model-section" class="chart-container">
+          <h6 class="text-light mb-3">Model geometrii napoiny - analiza wszystkich pomiarów</h6>
+          <div class="text-secondary mb-3" style="font-size: 10pt;">Pełna analiza geometrii napoiny ze wszystkich danych: średnie, odchylenia standardowe i błędy pomiarowe.</div>
+          <button id="generate-geometry-model-btn" type="button" class="btn btn-primary btn-sm mb-3">Generuj model geometrii</button>
+          <div id="geometry-model-container"></div>
+        </div>
         <div id="speed-summary-section" class="chart-container">
           <h6 class="text-light mb-3">Mean Weld Width vs Feed Rate</h6>
           <div class="text-secondary mb-3" style="font-size: 10pt;">Enter feed rate for each sample, then click "Mean vs Speed".</div>
@@ -380,12 +386,6 @@
             <img src="icons/math-formulas.svg" alt="Wzory użyte w obliczeniach" style="width: 100%; background: #fff; border-radius: 6px; padding: 10px;">
             <a class="btn btn-info btn-sm chart-download-btn" href="icons/math-formulas.svg" download="wzory-matematyczne.svg">⬇ Pobierz wzory (SVG)</a>
           </div>
-        </div>
-        <div id="geometry-model-section" class="chart-container">
-          <h6 class="text-light mb-3">Model geometrii napoiny w zależności od prędkości posuwu</h6>
-          <div class="text-secondary mb-3" style="font-size: 10pt;">Wizualizacja geometrii napoiny z danymi statystycznymi: średnie, odchylenia standardowe i błędy pomiarowe.</div>
-          <button id="generate-geometry-model-btn" type="button" class="btn btn-outline-info btn-sm mb-3">Generuj model geometrii z danych</button>
-          <div id="geometry-model-container"></div>
         </div>
         <div id="detailed-speed-section" class="detailed-speed-section"></div>
         <div id="charts-output"></div>
