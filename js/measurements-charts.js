@@ -20,18 +20,15 @@
   
   var generateGeometryBtn = document.getElementById('generate-geometry-model-btn');
   var geometryModelContainer = document.getElementById('geometry-model-container');
-  var weldImagesInput = document.getElementById('weld-images-input');
-  var weldImagesPreview = document.getElementById('weld-images-preview');
   
   var chartInstances = [];
   var summaryChartInstance = null;
   var aggregateChartInstances = [];
-  var geometryChartInstance = null;
+  var geometryChartInstances = [];
   var fileMeans = {};
   var speedInputsMap = {};
   var fileData = {};
   var detailedChartInstances = [];
-  var weldImages = [];
   
   // Toggle chart section
   toggleBtn.addEventListener('click', function() {
@@ -1507,37 +1504,6 @@
   }
 
   // Geometry model section
-  weldImagesInput.addEventListener('change', function() {
-    var files = weldImagesInput.files;
-    weldImages = [];
-    weldImagesPreview.innerHTML = '';
-    
-    for (var i = 0; i < files.length; i++) {
-      (function(file) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          weldImages.push({ name: file.name, data: e.target.result });
-          
-          var imgWrapper = document.createElement('div');
-          imgWrapper.style.cssText = 'border: 1px solid #555; border-radius: 6px; overflow: hidden; background: #2b2b2b;';
-          
-          var img = document.createElement('img');
-          img.src = e.target.result;
-          img.style.cssText = 'width: 100%; height: 150px; object-fit: cover;';
-          imgWrapper.appendChild(img);
-          
-          var label = document.createElement('div');
-          label.textContent = file.name;
-          label.style.cssText = 'padding: 6px; font-size: 9pt; color: #ddd; text-align: center;';
-          imgWrapper.appendChild(label);
-          
-          weldImagesPreview.appendChild(imgWrapper);
-        };
-        reader.readAsDataURL(file);
-      })(files[i]);
-    }
-  });
-
   generateGeometryBtn.addEventListener('click', function() {
     if (Object.keys(fileData).length === 0) {
       alert('Najpierw wygeneruj wykresy, aby uzyskać dane pomiarowe.');
@@ -1548,10 +1514,10 @@
 
   function createGeometryModel() {
     geometryModelContainer.innerHTML = '';
-    if (geometryChartInstance) {
-      geometryChartInstance.destroy();
-      geometryChartInstance = null;
+    for (var i = 0; i < geometryChartInstances.length; i++) {
+      geometryChartInstances[i].destroy();
     }
+    geometryChartInstances = [];
 
     // Collect data: speed -> {mean, stdDev, relativeError}
     var geometryData = [];
@@ -1572,7 +1538,8 @@
         mean: mean,
         stdDev: stdDev,
         relativeError: relativeError,
-        filename: filename
+        filename: filename,
+        n: values.length
       });
     }
 
@@ -1583,70 +1550,57 @@
 
     geometryData.sort(function(a, b) { return a.speed - b.speed; });
 
-    // Create container
-    var container = document.createElement('div');
-    container.className = 'mb-4';
+    // Create main container
+    var mainContainer = document.createElement('div');
+    mainContainer.className = 'mb-4';
 
-    // Images section
-    if (weldImages.length > 0) {
-      var imagesTitle = document.createElement('h6');
-      imagesTitle.className = 'text-light mb-2';
-      imagesTitle.textContent = 'Zdjęcia napoiny';
-      container.appendChild(imagesTitle);
+    // Weld geometry visualization (cross-sections)
+    var visualTitle = document.createElement('h6');
+    visualTitle.className = 'text-light mb-3';
+    visualTitle.textContent = 'Wizualizacja przekrojów napoiny dla różnych prędkości';
+    mainContainer.appendChild(visualTitle);
 
-      var imagesGrid = document.createElement('div');
-      imagesGrid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px;';
-      
-      for (var i = 0; i < weldImages.length; i++) {
-        var imgBox = document.createElement('div');
-        imgBox.style.cssText = 'border: 2px solid #555; border-radius: 8px; overflow: hidden; background: #fff;';
-        
-        var img = document.createElement('img');
-        img.src = weldImages[i].data;
-        img.style.cssText = 'width: 100%; height: auto;';
-        imgBox.appendChild(img);
-        
-        var caption = document.createElement('div');
-        caption.textContent = weldImages[i].name;
-        caption.style.cssText = 'padding: 8px; background: #2b2b2b; color: #ddd; font-size: 10pt; text-align: center;';
-        imgBox.appendChild(caption);
-        
-        imagesGrid.appendChild(imgBox);
-      }
-      container.appendChild(imagesGrid);
-    }
+    var visualCanvas = document.createElement('canvas');
+    visualCanvas.id = 'geometry-visual-canvas';
+    mainContainer.appendChild(visualCanvas);
 
-    // Chart title
-    var chartTitle = document.createElement('h6');
-    chartTitle.className = 'text-light mb-3';
-    chartTitle.textContent = 'Model geometrii napoiny: średnia szerokość ± odchylenie standardowe';
-    container.appendChild(chartTitle);
-
-    // Canvas
-    var canvas = document.createElement('canvas');
-    container.appendChild(canvas);
-
-    // Download button
-    var downloadBtn = document.createElement('button');
-    downloadBtn.className = 'btn btn-info btn-sm chart-download-btn mt-3';
-    downloadBtn.textContent = '⬇ Pobierz wykres (JPG)';
-    downloadBtn.onclick = function() {
-      downloadChartAsJPG(canvas, 'model-geometrii-napoiny.jpg');
+    var downloadVisualBtn = document.createElement('button');
+    downloadVisualBtn.className = 'btn btn-info btn-sm chart-download-btn mt-2 mb-4';
+    downloadVisualBtn.textContent = '⬇ Pobierz wizualizację (JPG)';
+    downloadVisualBtn.onclick = function() {
+      downloadChartAsJPG(visualCanvas, 'wizualizacja-geometrii-napoiny.jpg');
     };
-    container.appendChild(downloadBtn);
+    mainContainer.appendChild(downloadVisualBtn);
+
+    // Chart: Mean width vs Speed with error bars
+    var chartTitle = document.createElement('h6');
+    chartTitle.className = 'text-light mb-3 mt-4';
+    chartTitle.textContent = 'Średnia szerokość napoiny ± odchylenie standardowe';
+    mainContainer.appendChild(chartTitle);
+
+    var chartCanvas = document.createElement('canvas');
+    mainContainer.appendChild(chartCanvas);
+
+    var downloadChartBtn = document.createElement('button');
+    downloadChartBtn.className = 'btn btn-info btn-sm chart-download-btn mt-2';
+    downloadChartBtn.textContent = '⬇ Pobierz wykres (JPG)';
+    downloadChartBtn.onclick = function() {
+      downloadChartAsJPG(chartCanvas, 'model-geometrii-napoiny.jpg');
+    };
+    mainContainer.appendChild(downloadChartBtn);
 
     // Stats table
     var statsTitle = document.createElement('h6');
     statsTitle.className = 'text-light mt-4 mb-2';
-    statsTitle.textContent = 'Tabela analizy błędów';
-    container.appendChild(statsTitle);
+    statsTitle.textContent = 'Tabela analizy błędów pomiarowych';
+    mainContainer.appendChild(statsTitle);
 
     var table = document.createElement('table');
     table.className = 'table table-dark table-striped table-sm';
     table.style.cssText = 'font-size: 10pt;';
     
     var thead = document.createElement('thead');
-    thead.innerHTML = '<tr><th>Plik</th><th>Prędkość [mm/min]</th><th>Średnia [mm]</th><th>Odch. std. [mm]</th><th>Błąd względny [%]</th></tr>';
+    thead.innerHTML = '<tr><th>Plik</th><th>v [mm/min]</th><th>n</th><th>μ [mm]</th><th>σ [mm]</th><th>Błąd wzgl. [%]</th></tr>';
     table.appendChild(thead);
     
     var tbody = document.createElement('tbody');
@@ -1655,17 +1609,119 @@
       var row = document.createElement('tr');
       row.innerHTML = '<td>' + d.filename + '</td>' +
                       '<td>' + d.speed.toFixed(1) + '</td>' +
+                      '<td>' + d.n + '</td>' +
                       '<td>' + d.mean.toFixed(3) + '</td>' +
                       '<td>' + d.stdDev.toFixed(3) + '</td>' +
                       '<td>' + d.relativeError.toFixed(2) + '</td>';
       tbody.appendChild(row);
     }
     table.appendChild(tbody);
-    container.appendChild(table);
+    mainContainer.appendChild(table);
 
-    geometryModelContainer.appendChild(container);
+    geometryModelContainer.appendChild(mainContainer);
 
-    // Create chart
+    // Create weld cross-section visualization
+    createWeldVisualization(visualCanvas, geometryData);
+
+    // Create chart with error bars
+    createGeometryChart(chartCanvas, geometryData);
+  }
+
+  function createWeldVisualization(canvas, geometryData) {
+    var ctx = canvas.getContext('2d');
+    canvas.width = 1200;
+    canvas.height = 400;
+
+    // Background
+    ctx.fillStyle = '#f2f2f2';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var margin = { top: 50, right: 40, bottom: 80, left: 60 };
+    var plotWidth = canvas.width - margin.left - margin.right;
+    var plotHeight = canvas.height - margin.top - margin.bottom;
+
+    var n = geometryData.length;
+    var sectionWidth = plotWidth / n;
+
+    // Scale for weld width (vertical)
+    var maxWidth = 0;
+    for (var i = 0; i < geometryData.length; i++) {
+      var upper = geometryData[i].mean + geometryData[i].stdDev;
+      if (upper > maxWidth) maxWidth = upper;
+    }
+    var widthScale = plotHeight / (maxWidth * 1.3);
+
+    // Draw title
+    ctx.fillStyle = '#111';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Przekroje napoiny w funkcji prędkości posuwu', canvas.width / 2, 25);
+
+    // Draw each weld cross-section
+    for (var i = 0; i < geometryData.length; i++) {
+      var d = geometryData[i];
+      var x = margin.left + i * sectionWidth + sectionWidth / 2;
+      var mean = d.mean;
+      var stdDev = d.stdDev;
+
+      // Draw weld profile (simplified parabolic shape)
+      var weldWidth = mean * widthScale;
+      var weldHeight = weldWidth * 0.4;
+      var baseY = margin.top + plotHeight;
+
+      // Main weld body (mean)
+      ctx.fillStyle = 'rgba(70, 130, 180, 0.7)';
+      ctx.beginPath();
+      ctx.ellipse(x, baseY - weldHeight / 2, weldWidth / 2, weldHeight / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Error range visualization (stdDev)
+      var upperWidth = (mean + stdDev) * widthScale;
+      var lowerWidth = Math.max(0, mean - stdDev) * widthScale;
+      
+      ctx.strokeStyle = 'rgba(255, 193, 7, 0.8)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 3]);
+      
+      // Upper bound
+      ctx.beginPath();
+      ctx.ellipse(x, baseY - weldHeight / 2, upperWidth / 2, (upperWidth * 0.4) / 2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Lower bound
+      ctx.beginPath();
+      ctx.ellipse(x, baseY - weldHeight / 2, lowerWidth / 2, (lowerWidth * 0.4) / 2, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      ctx.setLineDash([]);
+
+      // Labels
+      ctx.fillStyle = '#111';
+      ctx.font = '11px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(d.speed.toFixed(0) + ' mm/min', x, baseY + 20);
+      ctx.fillText('μ=' + mean.toFixed(2) + 'mm', x, baseY + 35);
+      ctx.fillText('σ=' + stdDev.toFixed(2) + 'mm', x, baseY + 50);
+    }
+
+    // Legend
+    ctx.fillStyle = '#111';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('█ Średnia szerokość', margin.left, canvas.height - 15);
+    
+    ctx.strokeStyle = 'rgba(255, 193, 7, 0.8)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 3]);
+    ctx.beginPath();
+    ctx.moveTo(margin.left + 200, canvas.height - 20);
+    ctx.lineTo(margin.left + 250, canvas.height - 20);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillText('Zakres ±σ', margin.left + 260, canvas.height - 15);
+  }
+
+  function createGeometryChart(canvas, geometryData) {
     var speeds = geometryData.map(function(d) { return d.speed; });
     var means = geometryData.map(function(d) { return d.mean; });
     var stdDevs = geometryData.map(function(d) { return d.stdDev; });
@@ -1678,13 +1734,13 @@
     }
 
     var ctx = canvas.getContext('2d');
-    geometryChartInstance = new Chart(ctx, {
+    var chart = new Chart(ctx, {
       type: 'line',
       data: {
         labels: speeds,
         datasets: [
           {
-            label: 'Średnia szerokość',
+            label: 'Średnia szerokość (μ)',
             data: means,
             borderColor: 'rgba(76, 175, 80, 1)',
             backgroundColor: 'rgba(76, 175, 80, 0.2)',
@@ -1700,7 +1756,7 @@
             backgroundColor: 'transparent',
             borderWidth: 2,
             borderDash: [5, 5],
-            pointRadius: 3,
+            pointRadius: 4,
             fill: false
           },
           {
@@ -1710,7 +1766,7 @@
             backgroundColor: 'transparent',
             borderWidth: 2,
             borderDash: [5, 5],
-            pointRadius: 3,
+            pointRadius: 4,
             fill: false
           }
         ]
@@ -1722,7 +1778,7 @@
         plugins: {
           title: {
             display: true,
-            text: 'Geometria napoiny w funkcji prędkości posuwu',
+            text: 'Geometria napoiny w funkcji prędkości posuwu (z analizą błędu)',
             color: '#fff',
             font: { size: 14 }
           },
@@ -1761,5 +1817,6 @@
         }
       }
     });
+    geometryChartInstances.push(chart);
   }
 })();
