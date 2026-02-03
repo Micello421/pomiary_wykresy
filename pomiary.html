@@ -363,7 +363,7 @@
           <h6 class="text-light mb-3">Mean Weld Width vs Feed Rate</h6>
           <div class="text-secondary mb-3" style="font-size: 10pt;">Enter feed rate for each sample, then click "Mean vs Speed".</div>
           <div id="speed-inputs" class="speed-inputs"></div>
-          <button id="download-speed-chart-btn" type="button" class="btn btn-info btn-sm chart-download-btn">⬇ Download Chart (PNG)</button>
+          <button id="download-speed-chart-btn" type="button" class="btn btn-info btn-sm chart-download-btn">⬇ Download Chart (JPG)</button>
           <div class="chart-canvas-wrapper" style="margin-top: 20px;">
             <canvas id="speed-summary-chart"></canvas>
           </div>
@@ -372,6 +372,14 @@
           <h6 class="text-light mb-3">All Measurements vs Feed Rate (with Anomalies & Confidence)</h6>
           <button id="generate-aggregate-speed-charts-btn" type="button" class="btn btn-outline-info btn-sm mb-3">Generate Charts (Anomalies + CI)</button>
           <div id="aggregate-charts-container"></div>
+        </div>
+        <div id="math-formulas-section" class="chart-container">
+          <h6 class="text-light mb-3">Wzory użyte w obliczeniach</h6>
+          <div class="text-secondary mb-3" style="font-size: 10pt;">Oddzielny obraz do wklejenia do artykułu.</div>
+          <div class="d-flex flex-column gap-3">
+            <img src="icons/math-formulas.svg" alt="Wzory użyte w obliczeniach" style="width: 100%; background: #fff; border-radius: 6px; padding: 10px;">
+            <a class="btn btn-info btn-sm chart-download-btn" href="icons/math-formulas.svg" download="wzory-matematyczne.svg">⬇ Pobierz wzory (SVG)</a>
+          </div>
         </div>
         <div id="detailed-speed-section" class="detailed-speed-section"></div>
         <div id="charts-output"></div>
