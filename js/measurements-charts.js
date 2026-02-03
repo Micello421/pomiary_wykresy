@@ -1127,7 +1127,7 @@
     var extra = Math.max(2, span * 0.25);
     var forecastMin = minX - extra;
     var forecastMax = maxX + extra;
-    var margin = Math.max(0.1, step * 0.5);
+    var margin = Math.max(0.1, step);
 
     var observed = [];
     for (var x = minX; x <= maxX; x += step) {
@@ -1136,7 +1136,7 @@
 
     var forecast = [];
     for (var xf = forecastMin; xf <= forecastMax; xf += step) {
-      if (xf < (minX - margin) || xf > (maxX + margin)) {
+      if (xf <= (minX - margin) || xf >= (maxX + margin)) {
         forecast.push({ x: xf, y: evaluatePolynomial(xf, coeffs) });
       }
     }
